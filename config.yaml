@@ -1,15 +1,15 @@
-is_train: True # train deepsvdd
-is_rag: False # use post processing stage
-dataset_name: HPC #Android # BGL
+is_train: False # train deepsvdd
+is_rag: True # use post processing stage
+dataset_name: BGL #HPC #Android # BGL
 train_ratio: 0.8
 window_size: 200 
-window_time: 1800 # 30 minutes
+window_time: 1800 # 1800 = 30 minutes
 
 # dataset and model paths
-#log_structed_path: ./dataset/BGL/BGL_2k.log_structured.csv
+log_structed_path: ./dataset/BGL/BGL_2k.log_structured.csv
 #log_structed_path: ./dataset/BGL/bgl-example.log_structured.csv
 #log_structed_path: ./dataset/Android/Android_2k.log_structured.csv
-log_structed_path: ./dataset/HPC/HPC_2k.log_structured.csv
+#log_structed_path: ./dataset/HPC/HPC_2k.log_structured.csv
 encoder_path: ./pretrained
 
 #Android
@@ -19,15 +19,17 @@ encoder_path: ./pretrained
 #selected_column_values: V
 
 #HPC
-normal_column_label: Component
-selected_column_values: 'unix.hw' 
+#normal_column_label: Component
+#selected_column_values: 'unix.hw' 
 
-  #Label: Component
-
-  #normal_column_label: Label
-  #selected_column_values: '-'
+#Label: Component
+  
+#BGL
+normal_column_label: Label
+selected_column_values: '-'
 
 # openai key
+
 api_base: https://api.openai.com/v1
 
 llm_name: gpt-3.5-turbo
@@ -38,15 +40,15 @@ normal_class: 0
 is_pretrain: False
 optimizer_name: adam
 lr: 0.0001
-n_epochs: 150
+n_epochs: 300 # 150
 lr_milestones: [50]
-batch_size: 40960
+batch_size: 16384 # 40960
 weight_decay: 0.0005
 device: cuda:0
 n_jobs_dataloader: 0
 
 # rag parameters
-threshold: 0.8
-topk: 5
+threshold: 0.8 # 0.8
+topk: 5 # 5
 prompt: prompt5
 persist_directory: ./output/ragdb-bgl
