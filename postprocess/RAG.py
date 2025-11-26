@@ -64,7 +64,7 @@ class RAGPostProcessor:
 
     def get_vectordb(self, normal_log_entries):
         # 做成Embedding存入到Vector db
-        embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
+        embedding = OpenAIEmbeddings(model="text-embedding-3-small")
         # 读取训练数据
         if not os.path.exists(self.persist_directory):
             os.mkdir(self.persist_directory)
@@ -137,19 +137,20 @@ class RAGPostProcessor:
         return mistral_llm
 
 
-    def get_normal_log_entries(self):
+    def get_normal_log_entries(self, config):
         # get normal log entries from self.train_data_path
         train_df = pd.read_csv(self.train_data_path)
-        train_df = train_df[train_df['Label'] == '-']
+        #train_df = train_df[train_df['Label'] == '-']
+        train_df = train_df[train_df[config['normal_column_label']] == config['selected_column_values']]
         normal_log_entries = train_df['EventTemplate'].unique().tolist()
         return normal_log_entries
 
-    def post_process(self, anomaly_logs_path, test_data_path):
+    def post_process(self, anomaly_logs_path, test_data_path, config):
         result_path = 'output/anomaly_logs_detc_by_rag.csv'        
         answer_path = 'output/llm_answer.json'
         
         QA_CHAIN_PROMPT = PromptTemplate.from_template(template=self.prompt)
-        normal_log_entries = self.get_normal_log_entries()
+        normal_log_entries = self.get_normal_log_entries(config)
         self.logger.info(f"Normal log templates to embedding: , {len(normal_log_entries)}")
         vector_db = self.get_vectordb(normal_log_entries)
         retriever = self.get_retriever("thr", vector_db)

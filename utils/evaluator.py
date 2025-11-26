@@ -79,10 +79,18 @@ def evaluate(configs, test_data_path, anomaly_lineid_list, logger):
     # get the acc pre rec f1 scores
     idxs = df_test['LineId'].tolist()
     
+    label = configs['normal_column_label']
+    val = configs['selected_column_values']
+
     if dataset_name == "HDFS":
-        y_true = df_test['Label'].tolist()
+        y_true = df_test[label].tolist()
     else :
-        y_true = df_test['Label'].apply(lambda x : 0 if x == '-' else 1).tolist()
+        y_true = df_test[label].apply(lambda x : 0 if x == val else 1).tolist()
+
+    #if dataset_name == "HDFS":
+    #    y_true = df_test['Label'].tolist()
+    #else :
+    #    y_true = df_test['Label'].apply(lambda x : 0 if x == '-' else 1).tolist()
         
     y_true = np.array(y_true)
     
@@ -106,7 +114,26 @@ def evaluate(configs, test_data_path, anomaly_lineid_list, logger):
     wdtp, wdfp, wdtn, wdfn, wdacc, wdpre, wdrec, wdf1 = calculate_metrics(y_true_windowed, y_pred_windowed)
     logger.info(f"fixing windows size {window_size}, Tp: {wdtp}, Fp: {wdfp}, Tn: {wdtn}, Fn: {wdfn}")
     logger.info(f"fixing windows size {window_size}, Acc: {wdacc:.4f}, Precision: {wdpre:.4f}, Recall: {wdrec:.4f}, F1: {wdf1:.4f}\n")    
-
+    
+    #print(df_test.dtypes)
+    #y_true_windowed, y_pred_windowed = time_sliding_window(y_true, y_pred, df_test['Timestamp'].tolist(), window_size=seconds, step_size=seconds)
+    if 'Timestamp' not in df_test.columns:
+        if 'Date' in df_test.columns and 'Time' in df_test.columns:
+            fmt = "%m-%d %H:%M:%S.%f"   # month-day hour:minute:second.microsec
+            df_test["Timestamp"] = pd.to_datetime(df_test["Date"].astype(str) + " " + df_test["Time"].astype(str),format=fmt,errors="coerce")
+            df_test["Timestamp"] = df_test["Timestamp"].astype("int64")
+        elif 'Time' in df_test.columns:
+            df_test["Timestamp"] = df_test["Time"]
+        #df_test["Timestamp"] = pd.to_datetime(df_test["Date"].astype(str) + " " + df_test["Time"].astype(str),errors="coerce")
+        #y_true_windowed, y_pred_windowed = time_sliding_window(y_true, y_pred, df_test['Timestamp'].tolist(), window_size=seconds, step_size=seconds)
+    #elif 'Date' in df_test.columns and 'Time' in df_test.columns:
+    #    time_data = pd.to_datetime(df_test['Date'] + ' ' + df_test['Time'])
+    #    time_data = time_data.astype(np.int64) // 10**9  # convert to seconds
+    #    y_true_windowed, y_pred_windowed = time_sliding_window(y_true, y_pred, time_data.tolist(), window_size=seconds, step_size=seconds)
+    #else:
+    #    logger.info("No valid time column found for time-based sliding window evaluation.")
+    #    return
+    #print(df_test.dtypes)
     y_true_windowed, y_pred_windowed = time_sliding_window(y_true, y_pred, df_test['Timestamp'].tolist(), window_size=seconds, step_size=seconds)
     wdtp, wdfp, wdtn, wdfn, wdacc, wdpre, wdrec, wdf1 = calculate_metrics(y_true_windowed, y_pred_windowed)
     logger.info(f"time windows size {seconds} seconds, Tp: {wdtp}, Fp: {wdfp}, Tn: {wdtn}, Fn: {wdfn}")

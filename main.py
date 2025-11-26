@@ -44,7 +44,7 @@ def train_deepsvdd(train_data_path):
         logger.info('Loading model from ./output/model.tar' )
     else :
         # dataloader 
-        train_dataset = load_dataset(data_path=train_data_path, encoder_path=configs['encoder_path'])
+        train_dataset = load_dataset(data_path=train_data_path, encoder_path=configs['encoder_path'], config=configs)
         # pretrain and train 
         if configs['is_pretrain']:
             deep_SVDD.pretrain( train_dataset,
@@ -56,6 +56,7 @@ def train_deepsvdd(train_data_path):
                                 weight_decay=configs['weight_decay'],
                                 device=configs['device'],
                                 n_jobs_dataloader=configs['n_jobs_dataloader'])
+        print("dataset:", len(train_dataset.train_set))
         deep_SVDD.train(train_dataset,
                         optimizer_name=configs['optimizer_name'],  
                         lr=configs['lr'],  
@@ -78,8 +79,7 @@ def anomaly_detection(model_path, test_data_path):
     deep_SVDD.set_network("mlp")
     deep_SVDD.load_model(model_path=model_path, load_ae=False)
     logger.info('Loading model from ./output/model.tar' )
-    
-    test_dataset = load_dataset(data_path=test_data_path, encoder_path=configs['encoder_path'])
+    test_dataset = load_dataset(data_path=test_data_path, encoder_path=configs['encoder_path'], config=configs)
     anomalys, _ = deep_SVDD.test(test_dataset, device='cpu', n_jobs_dataloader=configs['n_jobs_dataloader'])   
 
     anomaly_lineid_list = [item[0] for item in tqdm(anomalys, desc='saving anomaly LineIds to list')]
@@ -100,10 +100,16 @@ def main():
     num_train = int(configs['train_ratio']*len(all_df))
 
     train_df = all_df[:num_train]
-    train_df = train_df[train_df['Label'] == '-']
+    col = configs['normal_column_label']
+    val = configs['selected_column_values']
+    print("col:", col, "val:", val)
+    train_df = train_df[train_df[col] == val]
+
     test_df = all_df[num_train:]
     
-    
+    print("Train size:", len(train_df))
+    print("Test size:", len(test_df))
+
     train_log_structed_path = f"./dataset/{configs['dataset_name']}/train_log_structured.csv"
     test_log_structed_path = f"./dataset/{configs['dataset_name']}/test_log_structured.csv"
 
@@ -118,7 +124,7 @@ def main():
     # rag postporcessing, get log templates embeddings
     if configs['is_rag']:
         RagPoster = RAG.RAGPostProcessor(configs, train_data_path=train_log_structed_path, logger=logger)
-        anomaly_lineid_list = RagPoster.post_process(anomaly_logs_path, test_log_structed_path)
+        anomaly_lineid_list = RagPoster.post_process(anomaly_logs_path, test_log_structed_path, configs)
     # print final results
     evaluate(configs, test_log_structed_path, anomaly_lineid_list, logger)
     

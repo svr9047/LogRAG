@@ -1,17 +1,34 @@
 is_train: True # train deepsvdd
-is_rag: True # use post processing stage
-dataset_name: BGL
+is_rag: False # use post processing stage
+dataset_name: HPC #Android # BGL
 train_ratio: 0.8
 window_size: 200 
 window_time: 1800 # 30 minutes
 
 # dataset and model paths
-log_structed_path: ./dataset/BGL/bgl-example.log_structured.csv
+#log_structed_path: ./dataset/BGL/BGL_2k.log_structured.csv
+#log_structed_path: ./dataset/BGL/bgl-example.log_structured.csv
+#log_structed_path: ./dataset/Android/Android_2k.log_structured.csv
+log_structed_path: ./dataset/HPC/HPC_2k.log_structured.csv
 encoder_path: ./pretrained
 
+#Android
+#normal_column_label: Component
+#selected_column_values: PowerManagerService 
+#normal_column_label: Level
+#selected_column_values: V
+
+#HPC
+normal_column_label: Component
+selected_column_values: 'unix.hw' 
+
+  #Label: Component
+
+  #normal_column_label: Label
+  #selected_column_values: '-'
+
 # openai key
-api_key: PUT_YOUR_OWN_API_KEY_HERE 
-api_base: https://api.openai-proxy.org/v1
+api_base: https://api.openai.com/v1
 
 llm_name: gpt-3.5-turbo
 # llm_name: mistralai/Mistral-7B-Instruct-v0.1 # from huggingface

@@ -69,7 +69,7 @@ def clean(s):
 
 
 class BGL_Dataset(TorchvisionDataset):
-    def __init__(self, root: str, encoder_path: str):
+    def __init__(self, root: str, encoder_path: str, config):
         '''
             root: data_path
         '''
@@ -85,12 +85,20 @@ class BGL_Dataset(TorchvisionDataset):
         for _, row in tqdm(df_logs.iterrows(), total=len(df_logs)):
             lineid  = row['LineId']
             content = row['Content']
+            #print("label ", config['normal_column_label'])
+            #if config['normal_column_label'].isdigit():
+            #    label = int(row['Label'])
+            #else:
+            #    label = row['Label']
+            #label = config['normal_column_label']
+            #print("Root", root)
+            #if "HDFS" in root:
+            #    print("HDFS", row['Label'])
+            #    label = row['Label']
+            #else:
+            #    label   = int(row['Label'] != '-')
+            label = int(row[config['normal_column_label']] != config['selected_column_values'])
 
-            if "HDFS" in root:
-                label = row['Label']
-            else:
-                label   = int(row['Label'] != '-')
-            
             try:
                 content = content[content.find(' ') + 1:]
                 content = clean(content.lower())
